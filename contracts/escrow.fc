@@ -1,0 +1,142 @@
+#include "stdlib.fc";
+
+;; AdBounty Escrow Contract
+;; Manages deposits, confirmations, and payouts for ad bounties
+;; 
+;; Storage:
+;; - owner: MsgAddress (advertiser who created the bounty)
+;; - channel_owner: MsgAddress (channel owner who will receive payout)
+;; - amount: Coins (TON amount locked in escrow)
+;; - deadline: Int (Unix timestamp for bounty deadline)
+;; - confirmed: Int (1 if channel owner confirmed views, 0 otherwise)
+;; - status: Int (0=pending, 1=posted, 2=confirmed, 3=released, 4=refunded)
+
+() load_data() inline {
+    var ds = get_data().begin_parse();
+    return (
+        ds~load_msg_addr(),  ;; owner
+        ds~load_msg_addr(),  ;; channel_owner
+        ds~load_coins(),     ;; amount
+        ds~load_uint(32),    ;; deadline
+        ds~load_uint(1),     ;; confirmed
+        ds~load_uint(8)      ;; status
+    );
+}
+
+() save_data(slice owner, slice channel_owner, int amount, int deadline, int confirmed, int status) inline {
+    set_data(begin_cell()
+        .store_slice(owner)
+        .store_slice(channel_owner)
+        .store_coins(amount)
+        .store_uint(deadline, 32)
+        .store_uint(confirmed, 1)
+        .store_uint(status, 8)
+        .end_cell());
+}
+
+;; Initialize escrow with bounty details
+() init_escrow(slice owner, slice channel_owner, int amount, int deadline) impure {
+    var (stored_owner, stored_channel, stored_amount, stored_deadline, stored_confirmed, stored_status) = load_data();
+    
+    ;; Only allow initialization if contract is empty
+    throw_if(100, stored_status != 0);
+    
+    save_data(owner, channel_owner, amount, deadline, 0, 0);
+}
+
+;; Deposit TON into escrow (called by advertiser)
+() deposit() impure {
+    var (owner, channel_owner, stored_amount, deadline, confirmed, status) = load_data();
+    
+    ;; Verify sender is owner
+    throw_if(101, ~ equal_slices(sender(), owner));
+    
+    ;; Verify status is pending
+    throw_if(102, status != 0);
+    
+    ;; Get incoming message value
+    int msg_value = get_balance().first;
+    
+    ;; Update amount and status to "posted"
+    save_data(owner, channel_owner, msg_value, deadline, confirmed, 1);
+}
+
+;; Confirm views and release payout (called by channel owner)
+() confirm_views() impure {
+    var (owner, channel_owner, amount, deadline, confirmed, status) = load_data();
+    
+    ;; Verify sender is channel owner
+    throw_if(103, ~ equal_slices(sender(), channel_owner));
+    
+    ;; Verify status is "posted"
+    throw_if(104, status != 1);
+    
+    ;; Verify deadline not exceeded (add 7 days grace period)
+    int current_time = now();
+    throw_if(105, current_time > deadline + 604800);
+    
+    ;; Mark as confirmed and release payout
+    save_data(owner, channel_owner, amount, deadline, 1, 2);
+    
+    ;; Send payout to channel owner
+    send_raw_message(begin_cell()
+        .store_uint(0x10, 6)  ;; flags: ignore_errors
+        .store_slice(channel_owner)
+        .store_coins(amount)
+        .store_uint(0, 1)     ;; no state_init
+        .store_uint(0, 1)     ;; no body
+        .end_cell(),
+        64);  ;; mode: carry remaining gas
+    
+    ;; Update status to released
+    save_data(owner, channel_owner, amount, deadline, 1, 3);
+}
+
+;; Refund to advertiser if deadline exceeded without confirmation
+() refund() impure {
+    var (owner, channel_owner, amount, deadline, confirmed, status) = load_data();
+    
+    ;; Verify deadline exceeded
+    int current_time = now();
+    throw_if(106, current_time <= deadline + 604800);
+    
+    ;; Verify not already released or refunded
+    throw_if(107, status == 3 || status == 4);
+    
+    ;; Send refund to owner
+    send_raw_message(begin_cell()
+        .store_uint(0x10, 6)  ;; flags: ignore_errors
+        .store_slice(owner)
+        .store_coins(amount)
+        .store_uint(0, 1)     ;; no state_init
+        .store_uint(0, 1)     ;; no body
+        .end_cell(),
+        64);  ;; mode: carry remaining gas
+    
+    ;; Update status to refunded
+    save_data(owner, channel_owner, amount, deadline, confirmed, 4);
+}
+
+;; Get contract state
+(slice, slice, int, int, int, int) get_escrow_data() method_id {
+    return load_data();
+}
+
+;; Main message handler
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+    
+    int op = in_msg_body~load_uint(32);
+    
+    if (op == 0x11111111) {  ;; deposit op
+        deposit();
+    } elseif (op == 0x22222222) {  ;; confirm_views op
+        confirm_views();
+    } elseif (op == 0x33333333) {  ;; refund op
+        refund();
+    } else {
+        throw(0xffff);
+    }
+}

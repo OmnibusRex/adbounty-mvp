@@ -2,18 +2,14 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Instala dependências
+# Primeiro copia apenas o requirements.txt (melhora cache)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o código
+# Agora copia TODO o resto do projeto
 COPY . .
 
-# Torna o script executável
-RUN chmod +x start.sh
+# Garante que o start.sh está presente e é executável
+RUN ls -la start.sh && chmod +x start.sh
 
-# Expõe a porta
-EXPOSE 8000
-
-# Comando para iniciar
 CMD ["./start.sh"]

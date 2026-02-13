@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>AdBounty</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            background: var(--tg-theme-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #222);
+        }
+        .card {
+            background: var(--tg-theme-secondary-bg-color, white);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: var(--tg-theme-bg-color, #f0f0f0);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🎯 AdBounty</h1>
+        
+        <div class="card">
+            <h3>Seus Canais</h3>
+            <div id="channels-content">Carregando canais...</div>
+        </div>
+        
+        <div class="card">
+            <h3>Campanhas Ativas</h3>
+            <div id="campaigns-content">Nenhuma campanha ativa</div>
+        </div>
+        
+        <button onclick="createCampaign()">➕ Nova Campanha</button>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div id="total-earned">0</div>
+                <small>TON Ganhos</small>
+            </div>
+            <div class="stat-item">
+                <div id="total-views">0</div>
+                <small>Visualizações</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        
+        // Mostra dados do usuário do Telegram
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.querySelector('h1').innerHTML += ` <span style="font-size: 14px;">👤 ${user.first_name}</span>`;
+        }
+        
+        function createCampaign() {
+            tg.showPopup({
+                title: 'Nova Campanha',
+                message: 'Funcionalidade em desenvolvimento. Em breve você poderá criar campanhas diretamente aqui!',
+                buttons: [{type: 'close'}]
+            });
+        }
+        
+        // Carrega dados do backend
+        async function loadUserData() {
+            if (!user) return;
+            
+            try {
+                const response = await fetch(`https://adbounty-mvp-production.up.railway.app/user/${user.id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('channels-content').innerHTML = 
+                        data.channels?.length ? data.channels.map(c => `📢 ${c}`).join('<br>') : 'Nenhum canal conectado';
+                }
+            } catch (error) {
+                console.log('Backend ainda não implementado');
+            }
+        }
+        
+        loadUserData();
+    </script>
+</body>
+</html>

@@ -28,6 +28,24 @@ if not BOT_TOKEN:
 # ============================================================================
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    web_app_url = "https://adbounty-mvp-production.up.railway.app"  # SUA NOVA URL
+    
+    keyboard = [[
+        InlineKeyboardButton(
+            text="🚀 Abrir AdBounty", 
+            web_app={"url": web_app_url}
+        )
+    ]]
+    
+    await update.message.reply_text(
+        "🎯 Welcome to AdBounty!\n\n"
+        "The decentralized ad marketplace for Telegram channels.\n\n"
+        "Click below to open the Mini App:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+
+sync def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command"""
     keyboard = [[
         InlineKeyboardButton("📱 Open AdBounty", url="https://adbounty.app")
@@ -41,6 +59,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Channel Owners: Earn TON by posting ads\n\n"
         "Use /help to see available commands.",
         reply_markup=reply_markup
+
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

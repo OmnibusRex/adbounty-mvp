@@ -131,3 +131,22 @@ logs:
 ps:
 	@echo "Running containers..."
 	docker-compose ps
+# Inicia o banco de dados e sincroniza o schema
+db-push:
+	pnpm drizzle-kit push
+
+# Inicia o projeto completo (Server + Metro)
+dev:
+	npm run dev
+
+# Abre o túnel do ngrok na porta do servidor
+tunnel:
+	ngrok http 3000
+
+# Atalho para limpar o banco caso queira começar do zero
+db-reset:
+	rm sqlite.db && pnpm drizzle-kit push
+
+# Comando "mestre" para ver o banco visualmente
+studio:
+	npx drizzle-kit studio

@@ -1,38 +1,38 @@
-# Submissão - AdBounty MVP
+# Submission - AdBounty MVP
 
-## 🎯 Visão Geral
-AdBounty é um marketplace descentralizado de anúncios para canais do Telegram, usando TON para pagamentos em escrow.
+## 🎯 Overview
+AdBounty is a decentralized advertisement marketplace for Telegram channels, using TON for escrow payments.
 
-## ✅ Funcionalidades Implementadas
-- Bot Telegram funcional (@AdEscrowMVPBot)
-- Backend FastAPI com documentação Swagger
-- Mini App Telegram básico
-- Deploy profissional no Railway
-- Integração com python-telegram-bot
-- Sistema de escrow via contratos TON
+## ✅ Implemented Features
+- Functional Telegram Bot (@AdEscrowMVPBot)
+- FastAPI backend with Swagger documentation
+- Basic Telegram Mini App
+- Professional deployment on Railway
+- Integration with python-telegram-bot
+- Escrow system via TON contracts
 
-## 🏗️ Arquitetura
+## 🏗️ Architecture
 - **Backend**: FastAPI + Uvicorn
 - **Bot**: python-telegram-bot 20.7
-- **Frontend**: HTML/CSS/JS puro (Mini App)
+- **Frontend**: Pure HTML/CSS/JS (Mini App)
 - **Infra**: Railway (Nixpacks + Docker)
 
-## 🚀 Deploy
+## 🚀 Deployment
 - URL: https://adbounty-mvp-production.up.railway.app
 - Bot: @AdEscrowMVPBot
 
-## 🔮 Próximos Passos
-- Implementar verificação de stats de canal
-- Criar fluxo completo de aprovação criativa
-- Adicionar auto-posting verificado
-- Implementar timeout automático para deals inativas
+## 🔮 Next Steps
+- Implement channel stats verification (TGStat API)
+- Create complete creative approval flow
+- Add verified auto-posting
+- Implement automatic timeout for inactive deals
 
-## 📊 Decisões Técnicas
-- Usei python-telegram-bot em vez de aiogram por estabilidade
-- Docker + Nixpacks para deploy flexível
-- Railway para hospedagem (gratuito e fácil)
+## 📊 Technical Decisions
+- Chose python-telegram-bot over aiogram for stability
+- Docker + Nixpacks for flexible deployment
+- Railway for hosting (free and easy to use)
 
-## ⚠️ Limitações Conhecidas
-- Mini App ainda básico (sem funcionalidades completas)
-- Verificação de stats via fallback apenas
-- Fluxo de aprovação simplificado
+## ⚠️ Known Limitations
+- Mini App still basic (no complete features yet)
+- Stats verification via fallback only
+- Simplified approval flow
